@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🎣 FishCast AI</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0a1628;
+      color: #e0f0ff;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    header {
+      background: linear-gradient(135deg, #0d2137, #0a3a5c);
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      border-bottom: 1px solid #1a4a6e;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.4);
+      z-index: 10;
+    }
+
+    header h1 {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #7dd3fc;
+      letter-spacing: 0.5px;
+    }
+
+    header .subtitle {
+      font-size: 0.72rem;
+      color: #64a0c0;
+      margin-top: 2px;
+    }
+
+    /* Source pill — small coloured tag showing data origin */
+    .src {
+      display: inline-block;
+      font-size: 0.58rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      padding: 2px 6px;
+      border-radius: 4px;
+      vertical-align: middle;
+      margin-left: 5px;
+    }
+    .src-live   { background: #0c3a1a; color: #4ade80; border: 1px solid #166534; }
+    .src-calc   { background: #1a2a0a; color: #a3e635; border: 1px solid #3f6212; }
+    .src-obs    { background: #0c1f3a; color: #60a5fa; border: 1px solid #1d4ed8; }
+    .src-device { background: #1a1a0a; color: #fbbf24; border: 1px solid #92400e; }
+
+    /* What-this-means note under a section */
+    .section-note {
+      font-size: 0.68rem;
+      color: #3a6a8a;
+      margin-top: 8px;
+      line-height: 1.5;
+    }
+    .section-note strong { color: #5a9ab0; }
+
+    .badge {
+      margin-left: auto;
+      background: #0ea5e9;
+      color: white;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .main {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    #map {
+      flex: 1;
+    }
+
+    .sidebar {
+      width: 320px;
+      background: #0d1e30;
+      border-left: 1px solid #1a3a52;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    .section {
+      padding: 16px;
+      border-bottom: 1px solid #1a3a52;
+    }
+
+    .section-title {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #4a90b0;
+      margin-bottom: 10px;
+      font-weight: 700;
+    }
+
+    /* Weather card */
+    .weather-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .weather-tile {
+      background: #112233;
+      border: 1px solid #1a3a52;
+      border-radius: 8px;
+      padding: 10px;
+      text-align: center;
+    }
+
+    .weather-tile .icon { font-size: 1.3rem; }
+    .weather-tile .val { font-size: 1rem; font-weight: 700; color: #7dd3fc; margin: 2px 0; }
+    .weather-tile .label { font-size: 0.65rem; color: #5a8aaa; }
+
+    /* Score */
+    .score-display {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .score-circle {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 1.4rem;
+      flex-shrink: 0;
+      border: 3px solid;
+    }
+
+    .score-circle .grade { font-size: 0.6rem; font-weight: 600; margin-top: 1px; }
+
+    .score-text { flex: 1; font-size: 0.82rem; line-height: 1.5; color: #a0c8e0; }
+
+    /* Spot list */
+    .spot-list { display: flex; flex-direction: column; gap: 6px; }
+
+    .spot-item {
+      background: #112233;
+      border: 1px solid #1a3a52;
+      border-radius: 8px;
+      padding: 10px 12px;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .spot-item:hover { background: #1a3050; border-color: #2a5a80; }
+    .spot-item.active { background: #1a3a55; border-color: #0ea5e9; }
+
+    .spot-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .spot-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .spot-name { font-size: 0.82rem; font-weight: 600; flex: 1; }
+    .spot-score { font-size: 0.8rem; font-weight: 700; }
+
+    .spot-meta { font-size: 0.7rem; color: #4a80a0; line-height: 1.6; }
+    .spot-meta .species { color: #7dd3fc; }
+    .spot-meta .obs-count { color: #a0c0d0; }
+    .spot-meta .last-seen { color: #3a7a5a; }
+
+    /* AI insight */
+    .ai-box {
+      background: linear-gradient(135deg, #0d2540, #0a1e35);
+      border: 1px solid #1e4a70;
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 0.8rem;
+      line-height: 1.6;
+      color: #90c8e8;
+    }
+
+    .ai-box .ai-label {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #0ea5e9;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    /* Loading */
+    #loading {
+      position: fixed;
+      inset: 0;
+      background: #0a1628;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      gap: 16px;
+    }
+
+    .spinner {
+      width: 48px; height: 48px;
+      border: 4px solid #1a3a52;
+      border-top-color: #0ea5e9;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    #loading p { color: #4a90b0; font-size: 0.9rem; }
+
+    .progress-bar-track {
+      width: 260px;
+      height: 6px;
+      background: #1a3a52;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #0ea5e9, #38bdf8);
+      border-radius: 999px;
+      transition: width 0.4s ease;
+      width: 0%;
+    }
+    .progress-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 4px;
+      width: 260px;
+    }
+    .progress-step {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.78rem;
+      color: #2a5a78;
+      transition: color 0.3s;
+    }
+    .progress-step.done  { color: #7dd3fc; }
+    .progress-step.active { color: #e0f0ff; }
+    .step-icon { width: 16px; text-align: center; font-size: 0.85rem; }
+
+    /* Leaflet overrides */
+    .leaflet-popup-content-wrapper {
+      background: #0d2137;
+      color: #e0f0ff;
+      border: 1px solid #1a4a6e;
+      border-radius: 10px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    }
+    .leaflet-popup-tip { background: #0d2137; }
+    .leaflet-popup-content { margin: 12px 16px; }
+    .popup-title { font-weight: 700; font-size: 0.95rem; color: #7dd3fc; margin-bottom: 4px; }
+    .popup-meta { font-size: 0.75rem; color: #5a8aaa; margin-bottom: 6px; }
+    .popup-score { font-size: 0.8rem; font-weight: 600; }
+
+    .time-chip {
+      background: #112233;
+      border: 1px solid #1a3a52;
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 0.78rem;
+      color: #7dd3fc;
+    }
+  </style>
+</head>
+<body>
+
+<div id="loading">
+  <div style="font-size:2.5rem">🎣</div>
+  <div class="spinner"></div>
+  <p id="loading-msg">Starting up…</p>
+  <div class="progress-bar-track">
+    <div class="progress-bar-fill" id="progress-fill"></div>
+  </div>
+  <div class="progress-steps">
+    <div class="progress-step" id="step-gps">   <span class="step-icon">📍</span> Getting your location</div>
+    <div class="progress-step" id="step-map">   <span class="step-icon">🗺</span> Loading map</div>
+    <div class="progress-step" id="step-wx">    <span class="step-icon">🌤</span> Fetching live weather</div>
+    <div class="progress-step" id="step-spots"> <span class="step-icon">🎣</span> Finding real fishing spots</div>
+    <div class="progress-step" id="step-ai">    <span class="step-icon">🤖</span> Running AI analysis</div>
+  </div>
+</div>
+
+<header>
+  <div>
+    <h1>🎣 FishCast AI</h1>
+    <div class="subtitle">Live conditions · AI-scored fishing spots</div>
+  </div>
+  <div class="badge">● Live</div>
+</header>
+
+<div class="main">
+  <div id="map"></div>
+  <div class="sidebar">
+
+    <div class="section">
+      <div class="section-title">
+        📍 Your Location &amp; Time
+        <span class="src src-device">Device GPS</span>
+      </div>
+      <div class="time-chip" id="time-display">--</div>
+      <div class="section-note">
+        Location from your browser's GPS/Wi-Fi.
+        <strong>Not shared</strong> — used only to fetch nearby data.
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">
+        🌤 Current Conditions
+        <span class="src src-live">Live · Open-Meteo</span>
+      </div>
+      <div class="weather-grid" id="weather-grid">
+        <div class="weather-tile"><div class="icon">--</div><div class="val">--</div><div class="label">Loading…</div></div>
+      </div>
+      <div class="section-note">
+        Real-time weather from <strong>Open-Meteo</strong> (meteorological model data). Updated on page load. <strong>No tide or water temperature data.</strong>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">
+        📊 Conditions Score
+        <span class="src src-calc">Calculated</span>
+      </div>
+      <div class="score-display">
+        <div class="score-circle" id="score-circle">
+          <span id="score-val">--</span>
+          <span class="grade" id="score-grade"></span>
+        </div>
+        <div class="score-text" id="score-text">Analysing…</div>
+      </div>
+      <div class="section-note">
+        <strong>Not AI.</strong> A rule-based formula using temperature, wind, cloud cover, rain chance, and time of day (dawn/dusk score highest). Does <strong>not</strong> account for tides, moon phase, bait, or technique.
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">
+        🐟 Fish Hotspots Nearby
+        <span class="src src-obs">iNaturalist</span>
+      </div>
+      <div class="spot-list" id="spot-list">
+        <div style="color:#4a90b0;font-size:0.8rem">Loading…</div>
+      </div>
+      <div class="section-note" id="spot-note">
+        Locations clustered from <strong>verified iNaturalist observations</strong>. Shows where fish have <em>actually been recorded</em> — not predictions. Hotspot score = observation count × recency.
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">
+        💬 Conditions Summary
+        <span class="src src-calc">Rule-based</span>
+      </div>
+      <div class="ai-box">
+        <div class="ai-label">Based on real weather + time of day</div>
+        <div id="ai-insight">Analysing…</div>
+      </div>
+      <div class="section-note">
+        Generated from the weather data above. <strong>Not an AI model</strong> — fixed logic for wind, cloud, and time of day. Ignore if conditions at your specific spot differ.
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── OpenStreetMap Overpass API — real fishing spots ─────────────────
+async function fetchRealSpots(lat, lon, radiusKm = 25) {
+  const res = await fetch(`/api/spots?lat=${lat}&lon=${lon}&radius=${radiusKm}`);
+  if (!res.ok) throw new Error(`Spots API error: ${res.status}`);
+  const data = await res.json();
+  if (data.error) throw new Error(data.error);
+  return data.hotspots || [];
+}
+
+function daysAgo(dateStr) {
+  if (!dateStr) return 'unknown';
+  const d = Math.floor((Date.now() - new Date(dateStr)) / 86400000);
+  if (d === 0) return 'today';
+  if (d === 1) return 'yesterday';
+  return `${d} days ago`;
+}
+
+function scoreSpots(hotspots, weather, hour) {
+  const condScore = Math.round(getWeatherScore(weather) * 0.6 + getTimeScore(hour) * 100 * 0.4);
+  const { grade, color } = gradeFromScore(condScore);
+  // Hotspots are already ranked by observation count from backend.
+  // We attach the shared conditions score but don't fake per-spot differentiation.
+  return hotspots.map(h => ({ ...h, condScore, grade, color }));
+}
+
+function createDotIcon(color) {
+  return L.divIcon({
+    className: '',
+    html: `<div style="width:14px;height:14px;border-radius:50%;background:${color};border:2px solid rgba(255,255,255,0.6);box-shadow:0 0 8px ${color}88"></div>`,
+    iconSize: [14, 14], iconAnchor: [7, 7],
+  });
+}
+
+function flyToSpot(idx) {
+  const spot = window._spots[idx];
+  map.flyTo([spot.lat, spot.lon], 14, { duration: 1 });
+  if (markers[idx]) markers[idx].openPopup();
+}
+
+function renderSpots(spots) {
+  const color = spots[0]?.color || '#eab308';
+
+  spots.forEach((spot, idx) => {
+    const speciesList = spot.species.slice(0, 4).join(', ') || 'Unknown';
+    const m = L.marker([spot.lat, spot.lon], { icon: createDotIcon(color) })
+      .addTo(map)
+      .bindPopup(`
+        <div class="popup-title">${spot.name}</div>
+        <div class="popup-meta" style="color:#60a5fa">🐟 ${speciesList}</div>
+        <div class="popup-meta">${spot.count} verified observations · last ${daysAgo(spot.last_seen)}</div>
+        <div class="popup-score" style="color:${color};margin-top:4px">Today's conditions: ${spot.condScore}/100 — ${spot.grade}</div>
+        <div style="font-size:0.62rem;color:#3a6a8a;margin-top:4px">
+          Source: iNaturalist research-grade observations
+        </div>
+      `);
+    markers[idx] = m;
+  });
+
+  document.getElementById('spot-list').innerHTML = spots.map((s, i) => `
+    <div class="spot-item ${i === 0 ? 'active' : ''}" onclick="flyToSpot(${i})">
+      <div class="spot-header">
+        <div class="spot-dot" style="background:${color}"></div>
+        <div class="spot-name">${s.name}</div>
+        <div class="spot-score" style="color:${color}">#${i + 1}</div>
+      </div>
+      <div class="spot-meta">
+        <span class="species">🐟 ${s.species.slice(0, 2).join(', ') || 'Unknown species'}</span><br>
+        <span class="obs-count">📊 ${s.count} verified obs</span>
+        &nbsp;·&nbsp;
+        <span class="last-seen">🕐 ${daysAgo(s.last_seen)}</span>
+      </div>
+    </div>
+  `).join('');
+  window._spots = spots;
+}
+function getTimeScore(hour) {
+  if (hour >= 5  && hour <= 8)  return 1.0;
+  if (hour >= 16 && hour <= 20) return 0.9;
+  if (hour >= 9  && hour <= 11) return 0.7;
+  if (hour >= 13 && hour <= 15) return 0.5;
+  if (hour >= 21 || hour <= 4)  return 0.4;
+  return 0.6;
+}
+
+function getWeatherScore(weather) {
+  const { temp, windSpeed, cloudCover, precipProb, weatherCode } = weather;
+  let score = 0;
+  if (temp >= 12 && temp <= 24) score += 25;
+  else if (temp >= 8 && temp <= 28) score += 15;
+  else score += 5;
+  if (windSpeed >= 5 && windSpeed <= 20) score += 25;
+  else if (windSpeed <= 30) score += 15;
+  else score += 5;
+  if (cloudCover >= 20 && cloudCover <= 70) score += 20;
+  else if (cloudCover < 20) score += 12;
+  else score += 10;
+  if (precipProb < 10) score += 20;
+  else if (precipProb < 30) score += 14;
+  else if (precipProb < 60) score += 7;
+  else score += 2;
+  if (weatherCode <= 1) score += 10;
+  else if (weatherCode <= 3) score += 8;
+  else if (weatherCode <= 48) score += 4;
+  else if (weatherCode >= 80) score -= 5;
+  return Math.min(100, Math.max(0, score));
+}
+
+function gradeFromScore(s) {
+  if (s >= 85) return { grade: 'Excellent', color: '#22c55e' };
+  if (s >= 70) return { grade: 'Good',      color: '#84cc16' };
+  if (s >= 55) return { grade: 'Fair',      color: '#eab308' };
+  if (s >= 40) return { grade: 'Poor',      color: '#f97316' };
+  return           { grade: 'Bad',       color: '#ef4444' };
+}
+
+function generateInsight(weather, overallScore, topSpotName) {
+  const { windSpeed, cloudCover } = weather;
+  const hour = new Date().getHours();
+  const timePart = hour >= 5 && hour <= 8   ? 'dawn — the prime feeding window'
+                 : hour >= 16 && hour <= 20  ? 'dusk — fish are active near the surface'
+                 : hour >= 21 || hour <= 4   ? 'night — consider glow lures or bait fishing'
+                 : 'mid-day — fish may be deeper in cooler water';
+  const windPart = windSpeed < 5   ? 'Near-calm winds mean glassy water — try surface lures.'
+                 : windSpeed <= 20 ? 'Light to moderate breeze creates ideal ripple for concealment.'
+                 : windSpeed <= 35 ? 'Stronger winds — fish downwind banks where baitfish concentrate.'
+                 : 'High winds — seek sheltered spots or inlets.';
+  const cloudPart = cloudCover < 20  ? 'Clear skies — fish will sit deeper or under structure.'
+                  : cloudCover <= 70 ? 'Overcast light is ideal — fish are less cautious and more active.'
+                  : 'Heavy cloud — use brighter lures or scented bait to attract attention.';
+  const outlook = overallScore >= 70 ? `Conditions are looking good. ${topSpotName} is your top OSM-mapped pick.`
+                : overallScore >= 50 ? `Moderate conditions. ${topSpotName} is worth a try.`
+                : `Tough day. ${topSpotName} gives you the best shot.`;
+  return `It's ${timePart}. ${windPart} ${cloudPart} ${outlook}`;
+}
+
+// ── Main ───────────────────────────────────────────────────────────
+let map, markers = {};
+
+const STEPS = ['step-gps', 'step-map', 'step-wx', 'step-spots', 'step-ai'];
+const STEP_PCT = { 'step-gps': 15, 'step-map': 30, 'step-wx': 55, 'step-spots': 75, 'step-ai': 95 };
+
+function setStep(stepId, msg) {
+  document.getElementById('loading-msg').textContent = msg;
+  document.getElementById('progress-fill').style.width = STEP_PCT[stepId] + '%';
+  STEPS.forEach(id => {
+    const el = document.getElementById(id);
+    const idx = STEPS.indexOf(id);
+    const cur = STEPS.indexOf(stepId);
+    el.classList.toggle('done',   idx < cur);
+    el.classList.toggle('active', idx === cur);
+    if (idx < cur) el.querySelector('.step-icon').textContent = '✓';
+  });
+}
+
+function hideLoading() {
+  document.getElementById('loading').style.display = 'none';
+}
+
+function showFatalError(title, detail) {
+  document.getElementById('loading').innerHTML = `
+    <div style="font-size:2rem">⚠️</div>
+    <div style="color:#f87171;font-weight:700;font-size:1rem;margin-top:8px">${title}</div>
+    <div style="color:#7a9ab0;font-size:0.8rem;max-width:280px;text-align:center;line-height:1.5;margin-top:6px">${detail}</div>
+    <button onclick="location.reload()"
+      style="margin-top:20px;padding:8px 20px;background:#0ea5e9;color:white;border:none;border-radius:8px;cursor:pointer;font-size:0.85rem">
+      Try Again
+    </button>
+  `;
+}
+
+function showSidebarError(msg) {
+  document.getElementById('spot-list').innerHTML = `
+    <div style="background:#1a0e0e;border:1px solid #5a1a1a;border-radius:8px;padding:12px;color:#f87171;font-size:0.8rem;line-height:1.5">
+      ⚠️ ${msg}
+    </div>`;
+}
+
+async function fetchWeather(lat, lon) {
+  const res = await fetch(`/api/weather?lat=${lat}&lon=${lon}`);
+  if (!res.ok) throw new Error(`Weather API error: ${res.status}`);
+  const data = await res.json();
+  if (data.error) throw new Error(data.error);
+  const c = data.current;
+  return {
+    temp:        Math.round(c.temperature_2m),
+    windSpeed:   Math.round(c.wind_speed_10m),
+    cloudCover:  Math.round(c.cloud_cover),
+    precipProb:  Math.round(c.precipitation_probability),
+    weatherCode: c.weather_code,
+  };
+}
+
+function renderWeather(w) {
+  document.getElementById('weather-grid').innerHTML = `
+    <div class="weather-tile"><div class="icon">🌡</div><div class="val">${w.temp}°C</div><div class="label">Temperature</div></div>
+    <div class="weather-tile"><div class="icon">💨</div><div class="val">${w.windSpeed} km/h</div><div class="label">Wind Speed</div></div>
+    <div class="weather-tile"><div class="icon">☁️</div><div class="val">${w.cloudCover}%</div><div class="label">Cloud Cover</div></div>
+    <div class="weather-tile"><div class="icon">🌧</div><div class="val">${w.precipProb}%</div><div class="label">Rain Chance</div></div>
+  `;
+}
+
+function renderScore(score) {
+  const { grade, color } = gradeFromScore(score);
+  const circle = document.getElementById('score-circle');
+  circle.style.borderColor = color;
+  circle.style.color = color;
+  document.getElementById('score-val').textContent = score;
+  document.getElementById('score-grade').textContent = grade;
+  const texts = {
+    'Excellent': "Prime conditions! Get out there — fish are active.",
+    'Good':      "Solid conditions. Morning feeders will be active.",
+    'Fair':      "Decent chance — adjust your technique to conditions.",
+    'Poor':      "Challenging day. Target structure and deeper water.",
+    'Bad':       "Tough conditions. Wait for a better window if possible.",
+  };
+  document.getElementById('score-text').textContent = texts[grade];
+}
+
+function updateClock() {
+  const now = new Date();
+  document.getElementById('time-display').textContent =
+    now.toLocaleString([], { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+
+async function init() {
+  updateClock();
+  setInterval(updateClock, 30000);
+
+  // GPS — no fallback; we need a real location
+  setStep('step-gps', 'Getting your location…');
+  let lat, lon;
+  try {
+    const pos = await new Promise((res, rej) =>
+      navigator.geolocation.getCurrentPosition(res, rej, { timeout: 12000 }));
+    lat = pos.coords.latitude;
+    lon = pos.coords.longitude;
+  } catch (err) {
+    const reason = err.code === 1 ? 'Location access was denied. Please allow location access and reload.'
+                 : err.code === 2 ? 'Your position could not be determined. Check your GPS/network.'
+                 : 'Location request timed out. Please reload and try again.';
+    showFatalError('Location unavailable', reason);
+    return;
+  }
+
+  // Map
+  setStep('step-map', 'Loading map…');
+  map = L.map('map', { zoomControl: true }).setView([lat, lon], 12);
+  // ESRI Ocean Base — waterways, harbours and ocean shown in blue; land muted; no street noise
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}', {
+    attribution: 'Tiles &copy; Esri — ESRI, GEBCO, NOAA, NGA, DeLorme, HERE',
+    maxZoom: 13,
+  }).addTo(map);
+  // Labels overlay on top so place names are still readable
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Reference/MapServer/tile/{z}/{y}/{x}', {
+    attribution: '',
+    maxZoom: 13,
+    opacity: 0.8,
+  }).addTo(map);
+  L.circleMarker([lat, lon], {
+    radius: 8, color: '#0ea5e9', fillColor: '#0ea5e9', fillOpacity: 0.8, weight: 2
+  }).addTo(map).bindPopup('<b>📍 You are here</b>');
+
+  // Weather — fatal if it fails
+  setStep('step-wx', 'Fetching live weather…');
+  let weather;
+  try {
+    weather = await fetchWeather(lat, lon);
+    renderWeather(weather);
+  } catch (err) {
+    hideLoading();
+    document.getElementById('weather-grid').innerHTML =
+      `<div style="color:#f87171;font-size:0.8rem;grid-column:span 2">⚠️ Weather data unavailable: ${err.message}</div>`;
+    showSidebarError('Cannot score spots without weather data.');
+    document.getElementById('ai-insight').textContent = 'Weather data unavailable — cannot generate insight.';
+    return;
+  }
+
+  // Spots — show error in sidebar if none found, don't fake anything
+  setStep('step-spots', 'Finding fish hotspots from iNaturalist…');
+  let hotspots = [];
+  try {
+    hotspots = await fetchRealSpots(lat, lon, 25);
+  } catch (err) {
+    showSidebarError(`Could not load fish observations from iNaturalist: ${err.message}`);
+  }
+
+  // Conditions score
+  setStep('step-ai', 'Calculating conditions score…');
+  const hour = new Date().getHours();
+  const score = Math.round(getWeatherScore(weather) * 0.6 + getTimeScore(hour) * 100 * 0.4);
+  renderScore(score);
+
+  const spotTitle = document.querySelector('#spot-list').closest('.section').querySelector('.section-title');
+  if (hotspots.length > 0) {
+    const scored = scoreSpots(hotspots, weather, hour);
+    renderSpots(scored);
+    spotTitle.innerHTML = `🐟 Fish Hotspots Nearby <span class="src src-obs">iNaturalist · ${hotspots.length} hotspots</span>`;
+    document.getElementById('ai-insight').textContent =
+      generateInsight(weather, score, scored[0].name);
+    setTimeout(() => {
+      map.flyTo([scored[0].lat, scored[0].lon], 13, { duration: 1.5 });
+      setTimeout(() => markers[0]?.openPopup(), 1600);
+    }, 800);
+  } else {
+    spotTitle.innerHTML = `🐟 Fish Hotspots Nearby <span class="src src-obs" style="background:#1a0e0e;color:#f87171;border-color:#5a1a1a">No data</span>`;
+    if (!document.querySelector('#spot-list .spot-item')) {
+      showSidebarError('No verified fish observations found in iNaturalist within 25km. The area may be unmapped — try contributing at inaturalist.org');
+    }
+    document.getElementById('ai-insight').textContent =
+      generateInsight(weather, score, 'your local area') +
+      ' No iNaturalist fish observations are available nearby to suggest specific spots.';
+  }
+
+  document.getElementById('progress-fill').style.width = '100%';
+  STEPS.forEach(id => {
+    document.getElementById(id).classList.add('done');
+    document.getElementById(id).querySelector('.step-icon').textContent = '✓';
+  });
+  document.getElementById('loading-msg').textContent = 'Ready!';
+  setTimeout(hideLoading, 400);
+}
+
+init();
+</script>
+</body>
+</html>
