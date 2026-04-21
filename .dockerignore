@@ -1,0 +1,8 @@
+# flyctl launch added from .gitignore
+**/fishcast
+**/node_modules
+**/test-results
+**/playwright-report
+**/*.log
+**/.DS_Store
+fly.toml

@@ -9,6 +9,37 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
+    /* Skip link — visually hidden until focused */
+    .skip-link {
+      position: absolute;
+      top: -100px;
+      left: 8px;
+      background: #0ea5e9;
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 0 0 8px 8px;
+      font-weight: 700;
+      text-decoration: none;
+      z-index: 99999;
+      transition: top 0.2s;
+    }
+    .skip-link:focus { top: 0; }
+
+    /* Accessibility link in header */
+    .a11y-link {
+      margin-left: auto;
+      color: #4a8aaa;
+      text-decoration: none;
+      font-size: 1.2rem;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+    .a11y-link:hover, .a11y-link:focus-visible {
+      color: #7dd3fc;
+      outline: 2px solid #0ea5e9;
+      outline-offset: 2px;
+    }
+
     body {
       font-family: 'Segoe UI', system-ui, sans-serif;
       background: #0a1628;
@@ -63,11 +94,11 @@
     /* What-this-means note under a section */
     .section-note {
       font-size: 0.68rem;
-      color: #3a6a8a;
+      color: #5a9aba; /* was #3a6a8a — contrast boosted for WCAG AA */
       margin-top: 8px;
       line-height: 1.5;
     }
-    .section-note strong { color: #5a9ab0; }
+    .section-note strong { color: #7ab8d0; }
 
     .badge {
       margin-left: auto;
@@ -131,7 +162,7 @@
 
     .weather-tile .icon { font-size: 1.3rem; }
     .weather-tile .val { font-size: 1rem; font-weight: 700; color: #7dd3fc; margin: 2px 0; }
-    .weather-tile .label { font-size: 0.65rem; color: #5a8aaa; }
+    .weather-tile .label { font-size: 0.65rem; color: #7aaac8; } /* was #5a8aaa — contrast boosted */
 
     /* Score */
     .score-display {
@@ -172,16 +203,20 @@
 
     .spot-item:hover { background: #1a3050; border-color: #2a5a80; }
     .spot-item.active { background: #1a3a55; border-color: #0ea5e9; }
+    .spot-item:focus-visible {
+      outline: 2px solid #0ea5e9;
+      outline-offset: 2px;
+    }
 
     .spot-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
     .spot-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
     .spot-name { font-size: 0.82rem; font-weight: 600; flex: 1; }
     .spot-score { font-size: 0.8rem; font-weight: 700; }
 
-    .spot-meta { font-size: 0.7rem; color: #4a80a0; line-height: 1.6; }
+    .spot-meta { font-size: 0.7rem; color: #6a9ab8; line-height: 1.6; } /* was #4a80a0 */
     .spot-meta .species { color: #7dd3fc; }
-    .spot-meta .obs-count { color: #a0c0d0; }
-    .spot-meta .last-seen { color: #3a7a5a; }
+    .spot-meta .obs-count { color: #b0d0e0; } /* was #a0c0d0 */
+    .spot-meta .last-seen { color: #5fba82; } /* was #3a7a5a — contrast boosted */
 
     /* AI insight */
     .ai-box {
@@ -226,6 +261,13 @@
 
     @keyframes spin { to { transform: rotate(360deg); } }
 
+    /* Respect user's motion preference */
+    @media (prefers-reduced-motion: reduce) {
+      .spinner { animation: none; border-top-color: #0ea5e9; }
+      .progress-bar-fill { transition: none; }
+      .spot-item { transition: none; }
+    }
+
     #loading p { color: #4a90b0; font-size: 0.9rem; }
 
     .progress-bar-track {
@@ -254,7 +296,7 @@
       align-items: center;
       gap: 10px;
       font-size: 0.78rem;
-      color: #2a5a78;
+      color: #5a8aaa; /* was #2a5a78 — contrast boosted for WCAG AA */
       transition: color 0.3s;
     }
     .progress-step.done  { color: #7dd3fc; }
@@ -287,11 +329,14 @@
 </head>
 <body>
 
-<div id="loading">
+<!-- Skip navigation link for keyboard users -->
+<a href="#main-content" class="skip-link">Skip to main content</a>
+
+<div id="loading" role="status" aria-live="polite" aria-label="Loading FishCast AI">
   <div style="font-size:2.5rem">🎣</div>
   <div class="spinner"></div>
   <p id="loading-msg">Starting up…</p>
-  <div class="progress-bar-track">
+  <div class="progress-bar-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Loading progress" id="progress-bar">
     <div class="progress-bar-fill" id="progress-fill"></div>
   </div>
   <div class="progress-steps">
@@ -303,22 +348,27 @@
   </div>
 </div>
 
-<header>
+<header role="banner">
   <div>
-    <h1>🎣 FishCast AI</h1>
-    <div class="subtitle">Live conditions · AI-scored fishing spots</div>
+    <h1><span aria-hidden="true">🎣</span> FishCast AI</h1>
+    <div class="subtitle">Live conditions · Real fish hotspots</div>
   </div>
-  <div class="badge">● Live</div>
+  <div class="badge" aria-label="Live data">
+    <span aria-hidden="true">●</span> Live
+  </div>
+  <a href="/accessibility" class="a11y-link" aria-label="Accessibility statement">
+    <span aria-hidden="true">♿</span>
+  </a>
 </header>
 
-<div class="main">
-  <div id="map"></div>
-  <div class="sidebar">
+<main class="main" id="main-content">
+  <div id="map" aria-label="Interactive map showing fish observation hotspots near your location" tabindex="-1"></div>
+  <div class="sidebar" tabindex="0" role="complementary" aria-label="Fishing conditions panel">
 
     <div class="section">
       <div class="section-title">
-        📍 Your Location &amp; Time
-        <span class="src src-device">Device GPS</span>
+        <span aria-hidden="true">📍</span> Your Location &amp; Time
+        <span class="src src-device" title="Data source: your device's GPS or Wi-Fi location">Device GPS</span>
       </div>
       <div class="time-chip" id="time-display">--</div>
       <div class="section-note">
@@ -329,8 +379,8 @@
 
     <div class="section">
       <div class="section-title">
-        🌤 Current Conditions
-        <span class="src src-live">Live · Open-Meteo</span>
+        <span aria-hidden="true">🌤</span> Current Conditions
+        <span class="src src-live" title="Data source: Open-Meteo live weather API">Live · Open-Meteo</span>
       </div>
       <div class="weather-grid" id="weather-grid">
         <div class="weather-tile"><div class="icon">--</div><div class="val">--</div><div class="label">Loading…</div></div>
@@ -342,11 +392,11 @@
 
     <div class="section">
       <div class="section-title">
-        📊 Conditions Score
-        <span class="src src-calc">Calculated</span>
+        <span aria-hidden="true">📊</span> Conditions Score
+        <span class="src src-calc" title="Data source: calculated from weather data using fixed rules — not AI">Calculated</span>
       </div>
       <div class="score-display">
-        <div class="score-circle" id="score-circle">
+        <div class="score-circle" id="score-circle" aria-label="Conditions score: loading">
           <span id="score-val">--</span>
           <span class="grade" id="score-grade"></span>
         </div>
@@ -359,8 +409,8 @@
 
     <div class="section">
       <div class="section-title">
-        🐟 Fish Hotspots Nearby
-        <span class="src src-obs">iNaturalist</span>
+        <span aria-hidden="true">🐟</span> Fish Hotspots Nearby
+        <span class="src src-obs" title="Data source: verified iNaturalist fish observations">iNaturalist</span>
       </div>
       <div class="spot-list" id="spot-list">
         <div style="color:#4a90b0;font-size:0.8rem">Loading…</div>
@@ -372,8 +422,8 @@
 
     <div class="section">
       <div class="section-title">
-        💬 Conditions Summary
-        <span class="src src-calc">Rule-based</span>
+        <span aria-hidden="true">💬</span> Conditions Summary
+        <span class="src src-calc" title="Data source: calculated from weather data using fixed rules — not AI">Rule-based</span>
       </div>
       <div class="ai-box">
         <div class="ai-label">Based on real weather + time of day</div>
@@ -385,10 +435,10 @@
     </div>
 
   </div>
-</div>
+</main>
 
 <script>
-// ── OpenStreetMap Overpass API — real fishing spots ─────────────────
+// ── Spots API ────────────────────────────────────────────────────────
 async function fetchRealSpots(lat, lon, radiusKm = 25) {
   const res = await fetch(`/api/spots?lat=${lat}&lon=${lon}&radius=${radiusKm}`);
   if (!res.ok) throw new Error(`Spots API error: ${res.status}`);
@@ -436,28 +486,39 @@ function renderSpots(spots) {
       .addTo(map)
       .bindPopup(`
         <div class="popup-title">${spot.name}</div>
-        <div class="popup-meta" style="color:#60a5fa">🐟 ${speciesList}</div>
+        <div class="popup-meta" style="color:#60a5fa"><span aria-hidden="true">🐟</span> ${speciesList}</div>
         <div class="popup-meta">${spot.count} verified observations · last ${daysAgo(spot.last_seen)}</div>
         <div class="popup-score" style="color:${color};margin-top:4px">Today's conditions: ${spot.condScore}/100 — ${spot.grade}</div>
-        <div style="font-size:0.62rem;color:#3a6a8a;margin-top:4px">
+        <div style="font-size:0.62rem;color:#5a9aba;margin-top:4px">
           Source: iNaturalist research-grade observations
         </div>
       `);
+    // Give the marker icon an accessible name so screen readers announce it
+    const el = m.getElement();
+    if (el) el.setAttribute('aria-label', `Fish hotspot: ${spot.name} — ${spot.count} observations`);
+    m.on('add', () => {
+      const e = m.getElement();
+      if (e) e.setAttribute('aria-label', `Fish hotspot: ${spot.name} — ${spot.count} observations`);
+    });
     markers[idx] = m;
   });
 
   document.getElementById('spot-list').innerHTML = spots.map((s, i) => `
-    <div class="spot-item ${i === 0 ? 'active' : ''}" onclick="flyToSpot(${i})">
+    <div class="spot-item ${i === 0 ? 'active' : ''}"
+         role="button" tabindex="0"
+         aria-label="Hotspot ${i + 1}: ${s.name}, ${s.count} observations, last seen ${daysAgo(s.last_seen)}"
+         onclick="flyToSpot(${i})"
+         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();flyToSpot(${i})}">
       <div class="spot-header">
-        <div class="spot-dot" style="background:${color}"></div>
+        <div class="spot-dot" style="background:${color}" aria-hidden="true"></div>
         <div class="spot-name">${s.name}</div>
-        <div class="spot-score" style="color:${color}">#${i + 1}</div>
+        <div class="spot-score" style="color:${color}" aria-hidden="true">#${i + 1}</div>
       </div>
-      <div class="spot-meta">
-        <span class="species">🐟 ${s.species.slice(0, 2).join(', ') || 'Unknown species'}</span><br>
-        <span class="obs-count">📊 ${s.count} verified obs</span>
+      <div class="spot-meta" aria-hidden="true">
+        <span class="species"><span aria-hidden="true">🐟</span> ${s.species.slice(0, 2).join(', ') || 'Unknown species'}</span><br>
+        <span class="obs-count"><span aria-hidden="true">📊</span> ${s.count} verified obs</span>
         &nbsp;·&nbsp;
-        <span class="last-seen">🕐 ${daysAgo(s.last_seen)}</span>
+        <span class="last-seen"><span aria-hidden="true">🕐</span> ${daysAgo(s.last_seen)}</span>
       </div>
     </div>
   `).join('');
@@ -531,7 +592,9 @@ const STEP_PCT = { 'step-gps': 15, 'step-map': 30, 'step-wx': 55, 'step-spots': 
 
 function setStep(stepId, msg) {
   document.getElementById('loading-msg').textContent = msg;
-  document.getElementById('progress-fill').style.width = STEP_PCT[stepId] + '%';
+  const pct = STEP_PCT[stepId];
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-bar').setAttribute('aria-valuenow', pct);
   STEPS.forEach(id => {
     const el = document.getElementById(id);
     const idx = STEPS.indexOf(id);
@@ -582,10 +645,10 @@ async function fetchWeather(lat, lon) {
 
 function renderWeather(w) {
   document.getElementById('weather-grid').innerHTML = `
-    <div class="weather-tile"><div class="icon">🌡</div><div class="val">${w.temp}°C</div><div class="label">Temperature</div></div>
-    <div class="weather-tile"><div class="icon">💨</div><div class="val">${w.windSpeed} km/h</div><div class="label">Wind Speed</div></div>
-    <div class="weather-tile"><div class="icon">☁️</div><div class="val">${w.cloudCover}%</div><div class="label">Cloud Cover</div></div>
-    <div class="weather-tile"><div class="icon">🌧</div><div class="val">${w.precipProb}%</div><div class="label">Rain Chance</div></div>
+    <div class="weather-tile"><div class="icon" aria-hidden="true">🌡</div><div class="val">${w.temp}°C</div><div class="label">Temperature</div></div>
+    <div class="weather-tile"><div class="icon" aria-hidden="true">💨</div><div class="val">${w.windSpeed} km/h</div><div class="label">Wind Speed</div></div>
+    <div class="weather-tile"><div class="icon" aria-hidden="true">☁️</div><div class="val">${w.cloudCover}%</div><div class="label">Cloud Cover</div></div>
+    <div class="weather-tile"><div class="icon" aria-hidden="true">🌧</div><div class="val">${w.precipProb}%</div><div class="label">Rain Chance</div></div>
   `;
 }
 
@@ -594,6 +657,7 @@ function renderScore(score) {
   const circle = document.getElementById('score-circle');
   circle.style.borderColor = color;
   circle.style.color = color;
+  circle.setAttribute('aria-label', `Conditions score: ${score} out of 100 — ${grade}`);
   document.getElementById('score-val').textContent = score;
   document.getElementById('score-grade').textContent = grade;
   const texts = {
@@ -684,7 +748,7 @@ async function init() {
   if (hotspots.length > 0) {
     const scored = scoreSpots(hotspots, weather, hour);
     renderSpots(scored);
-    spotTitle.innerHTML = `🐟 Fish Hotspots Nearby <span class="src src-obs">iNaturalist · ${hotspots.length} hotspots</span>`;
+    spotTitle.innerHTML = `<span aria-hidden="true">🐟</span> Fish Hotspots Nearby <span class="src src-obs" title="Data source: verified iNaturalist fish observations">iNaturalist · ${hotspots.length} hotspots</span>`;
     document.getElementById('ai-insight').textContent =
       generateInsight(weather, score, scored[0].name);
     setTimeout(() => {
@@ -692,7 +756,7 @@ async function init() {
       setTimeout(() => markers[0]?.openPopup(), 1600);
     }, 800);
   } else {
-    spotTitle.innerHTML = `🐟 Fish Hotspots Nearby <span class="src src-obs" style="background:#1a0e0e;color:#f87171;border-color:#5a1a1a">No data</span>`;
+    spotTitle.innerHTML = `<span aria-hidden="true">🐟</span> Fish Hotspots Nearby <span class="src src-obs" title="Data source: verified iNaturalist fish observations" style="background:#1a0e0e;color:#f87171;border-color:#5a1a1a">No data</span>`;
     if (!document.querySelector('#spot-list .spot-item')) {
       showSidebarError('No verified fish observations found in iNaturalist within 25km. The area may be unmapped — try contributing at inaturalist.org');
     }
@@ -702,6 +766,7 @@ async function init() {
   }
 
   document.getElementById('progress-fill').style.width = '100%';
+  document.getElementById('progress-bar').setAttribute('aria-valuenow', '100');
   STEPS.forEach(id => {
     document.getElementById(id).classList.add('done');
     document.getElementById(id).querySelector('.step-icon').textContent = '✓';

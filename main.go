@@ -19,6 +19,11 @@ func main() {
 	// Static frontend
 	mux.Handle("/", http.FileServer(http.Dir("static")))
 
+	// Clean URL for accessibility statement
+	mux.HandleFunc("/accessibility", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "static/accessibility.html")
+	})
+
 	// API routes
 	mux.HandleFunc("/api/weather", weatherHandler(cache, flight))
 	mux.HandleFunc("/api/spots", spotsHandler(cache, flight))

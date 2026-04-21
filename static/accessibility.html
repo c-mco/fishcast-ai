@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Accessibility Statement — FishCast AI</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #0a1628;
+      --bg2:     #0d1e30;
+      --border:  #1a3a52;
+      --text:    #e0f0ff;
+      --muted:   #7aaac8;
+      --accent:  #0ea5e9;
+      --green:   #4ade80;
+      --amber:   #fbbf24;
+      --red:     #f87171;
+      --max:     760px;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.65;
+      padding: 0 16px 64px;
+    }
+
+    /* Skip link */
+    .skip-link {
+      position: absolute; top: -100px; left: 8px;
+      background: var(--accent); color: #fff;
+      padding: 8px 16px; border-radius: 0 0 8px 8px;
+      font-weight: 700; text-decoration: none; z-index: 9999;
+      transition: top 0.2s;
+    }
+    .skip-link:focus { top: 0; }
+
+    header {
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 28px 0 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: baseline;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    header h1 {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #7dd3fc;
+    }
+    .back-link {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.85rem;
+    }
+    .back-link:hover, .back-link:focus-visible {
+      color: var(--accent);
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+      border-radius: 3px;
+    }
+
+    main {
+      max-width: var(--max);
+      margin: 0 auto;
+    }
+
+    h2 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #7dd3fc;
+      margin: 40px 0 12px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    h3 {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #a0d0f0;
+      margin: 20px 0 6px;
+    }
+
+    p { margin-bottom: 12px; color: var(--text); }
+    p + p { margin-top: 4px; }
+
+    a { color: var(--accent); }
+    a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
+
+    /* Status table */
+    .status-grid {
+      display: grid;
+      gap: 8px;
+      margin: 16px 0;
+    }
+
+    .status-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: start;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+    }
+
+    .status-row.pass  { border-left: 3px solid var(--green); }
+    .status-row.warn  { border-left: 3px solid var(--amber); }
+    .status-row.fail  { border-left: 3px solid var(--red);   }
+    .status-row.info  { border-left: 3px solid #60a5fa;      }
+
+    .status-label { font-size: 0.82rem; font-weight: 600; }
+    .status-desc  { font-size: 0.75rem; color: var(--muted); margin-top: 3px; }
+
+    .badge {
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      white-space: nowrap;
+      align-self: start;
+    }
+    .badge.pass { background: #0c3a1a; color: var(--green); border: 1px solid #166534; }
+    .badge.warn { background: #1a1200; color: var(--amber); border: 1px solid #78350f; }
+    .badge.fail { background: #1a0808; color: var(--red);   border: 1px solid #7f1d1d; }
+    .badge.info { background: #0c1f3a; color: #60a5fa;      border: 1px solid #1d4ed8; }
+
+    /* Audit detail box */
+    .audit-box {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin: 12px 0;
+      font-size: 0.82rem;
+    }
+    .audit-box code {
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      background: #0a1628;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 1px 5px;
+      font-size: 0.78rem;
+      color: #93c5fd;
+    }
+    .audit-box ul { margin: 8px 0 0 18px; }
+    .audit-box li { margin-bottom: 4px; color: var(--muted); }
+    .audit-box li strong { color: var(--text); }
+
+    .tool-tag {
+      display: inline-block;
+      font-size: 0.62rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      padding: 1px 5px;
+      border-radius: 3px;
+      background: #1a2a3a;
+      color: #60a5fa;
+      border: 1px solid #2a4a6a;
+      margin-right: 4px;
+      vertical-align: middle;
+    }
+
+    .cannot-test {
+      background: #1a1a0a;
+      border: 1px solid #3a3a1a;
+      border-left: 3px solid var(--amber);
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin: 12px 0;
+      font-size: 0.82rem;
+    }
+    .cannot-test strong { color: var(--amber); }
+
+    footer {
+      max-width: var(--max);
+      margin: 48px auto 0;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    .conformance-banner {
+      background: linear-gradient(135deg, #0c1f3a, #0a1628);
+      border: 1px solid #1d4ed8;
+      border-radius: 10px;
+      padding: 20px;
+      margin: 24px 0;
+      display: flex;
+      gap: 16px;
+      align-items: center;
+    }
+    .conformance-banner .level {
+      font-size: 2rem;
+      font-weight: 900;
+      color: var(--amber);
+      flex-shrink: 0;
+    }
+    .conformance-banner .desc { font-size: 0.85rem; color: #a0c8e0; }
+    .conformance-banner .desc strong { color: var(--text); }
+  </style>
+</head>
+<body>
+
+<a href="#main-content" class="skip-link">Skip to main content</a>
+
+<header role="banner">
+  <h1>Accessibility Statement</h1>
+  <a href="/" class="back-link" aria-label="Back to FishCast AI application">← FishCast AI</a>
+</header>
+
+<main id="main-content">
+
+  <div class="conformance-banner" role="note" aria-label="WCAG conformance target">
+    <div class="level" aria-hidden="true">AA</div>
+    <div class="desc">
+      <strong>Target: WCAG 2.1 Level AA</strong><br>
+      FishCast AI aims to meet the Web Content Accessibility Guidelines 2.1 at conformance level AA.
+      This page documents our current status, what we've fixed, and where known limitations exist.
+      Last audited: <strong>21 April 2026</strong>.
+    </div>
+  </div>
+
+  <!-- ── Current Status ─────────────────────────────────────────────────── -->
+  <h2 id="current-status">Current Status</h2>
+
+  <p>
+    We ran automated audits using <strong>axe-core 4</strong> (via <code>@axe-core/playwright</code>)
+    and <strong>15 Playwright tests</strong> covering keyboard navigation, colour contrast, ARIA semantics,
+    focus visibility, and reduced-motion. All 15 tests pass as of the last audit.
+  </p>
+
+  <div class="status-grid" role="list" aria-label="Accessibility feature status">
+
+    <div class="status-row pass" role="listitem">
+      <div>
+        <div class="status-label">Colour contrast — WCAG 1.4.3 AA</div>
+        <div class="status-desc">
+          <span class="tool-tag">axe-core</span>
+          All text elements verified to meet 4.5:1 ratio (normal text) and 3:1 (large text).
+          Previously failing: progress step labels, section notes, weather tile labels, hotspot metadata.
+          All boosted in the last audit cycle.
+        </div>
+      </div>
+      <span class="badge pass" aria-label="Passing">Pass</span>
+    </div>
+
+    <div class="status-row pass" role="listitem">
+      <div>
+        <div class="status-label">Keyboard navigation — WCAG 2.1.1</div>
+        <div class="status-desc">
+          <span class="tool-tag">Playwright</span>
+          All hotspot list items are reachable by Tab, activatable by Enter or Space.
+          Focus order follows visual layout (top-to-bottom sidebar).
+        </div>
+      </div>
+      <span class="badge pass" aria-label="Passing">Pass</span>
+    </div>
+
+    <div class="status-row pass" role="listitem">
+      <div>
+        <div class="status-label">Focus visible — WCAG 2.4.7 AA / 2.4.11 AAA</div>
+        <div class="status-desc">
+          <span class="tool-tag">Playwright</span>
+          All interactive elements show a visible focus ring (<code>outline: 2px solid #0ea5e9</code>).
+          Uses <code>:focus-visible</code> so mouse users are not affected.
+        </div>
+      </div>
+      <span class="badge pass" aria-label="Passing">Pass</span>
+    </div>
+
+    <div class="status-row pass" role="listitem">
+      <div>
+        <div class="status-label">Landmark regions — WCAG 1.3.6</div>
+        <div class="status-desc">
+          <span class="tool-tag">axe-core</span>
+          Page has <code>&lt;header role="banner"&gt;</code>, <code>&lt;main&gt;</code>,
+          and <code>&lt;div role="complementary"&gt;</code> (sidebar). All content is within a landmark.
+        </div>
+      </div>
+      <span class="badge pass" aria-label="Passing">Pass</span>
+    </div>
+
+    <div class="status-row pass" role="listitem">
+      <div>
+        <div class="status-label">Skip navigation link — WCAG 2.4.1</div>
+        <div class="status-desc">
+          <span class="tool-tag">Manual</span>
+          A visually hidden "Skip to main content" link is the first focusable element. It
+          becomes visible on focus and bypasses the header to reach <code>#main-content</code>.
+        </div>
+      </div>
+      <span class="badge pass" aria-label="Passing">Pass</span>
+    </div>
+
+    <div class="status-row pass" role="listitem">
+      <div>
+        <div class="status-label">Loading / progress feedback — WCAG 4.1.3</div>
+        <div class="status-desc">
+          <span class="tool-tag">Playwright</span>
+          The loading overlay has <code>role="status" aria-live="polite"</code>.
+          The progress bar has <code>role="progressbar"</code> with <code>aria-valuenow</code>
+          and <code>aria-valuemax="100"</code> updated at each step.
+        </div>
+      </div>
+      <span class="badge pass" aria-label="Passing">Pass</span>
+    </div>
+
+    <div class="status-row pass" role="listitem">
+      <div>
+        <div class="status-label">Interactive elements have accessible names — WCAG 4.1.2</div>
+        <div class="status-desc">
+          <span class="tool-tag">axe-core</span>
+          All hotspot list items have <code>role="button"</code> with a descriptive
+          <code>aria-label</code> (e.g. "Hotspot 1: Botany Bay — 47 observations").
+          Map markers have <code>aria-label</code> set after Leaflet renders them.
+          Score circle has a dynamic <code>aria-label</code> ("Conditions score: 72 out of 100 — Good").
+        </div>
+      </div>
+      <span class="badge pass" aria-label="Passing">Pass</span>
+    </div>
+
+    <div class="status-row pass" role="listitem">
+      <div>
+        <div class="status-label">Decorative images / emoji — WCAG 1.1.1</div>
+        <div class="status-desc">
+          <span class="tool-tag">Playwright</span>
+          All decorative emoji (🎣 📍 🌤 etc.) are wrapped in
+          <code>&lt;span aria-hidden="true"&gt;</code>. Screen readers skip them.
+        </div>
+      </div>
+      <span class="badge pass" aria-label="Passing">Pass</span>
+    </div>
+
+    <div class="status-row pass" role="listitem">
+      <div>
+        <div class="status-label">Data source badges explained — WCAG 1.3.1</div>
+        <div class="status-desc">
+          <span class="tool-tag">Playwright</span>
+          Every coloured source badge (e.g. <em>Live · Open-Meteo</em>, <em>iNaturalist</em>)
+          has a <code>title</code> attribute explaining the full meaning.
+        </div>
+      </div>
+      <span class="badge pass" aria-label="Passing">Pass</span>
+    </div>
+
+    <div class="status-row pass" role="listitem">
+      <div>
+        <div class="status-label">Reduced motion — WCAG 2.3.3 AAA</div>
+        <div class="status-desc">
+          <span class="tool-tag">Playwright</span>
+          When the OS has <em>prefers-reduced-motion: reduce</em> set, the loading spinner
+          animation is disabled and CSS transitions on the progress bar and spot items
+          are removed.
+        </div>
+      </div>
+      <span class="badge pass" aria-label="Passing">Pass</span>
+    </div>
+
+    <div class="status-row pass" role="listitem">
+      <div>
+        <div class="status-label">Scrollable region keyboard accessible — WCAG 2.1.1</div>
+        <div class="status-desc">
+          <span class="tool-tag">axe-core</span>
+          The sidebar (overflow-y: auto) has <code>tabindex="0"</code> so keyboard users
+          can scroll it. Previously flagged by axe as <code>scrollable-region-focusable</code>.
+        </div>
+      </div>
+      <span class="badge pass" aria-label="Passing">Pass</span>
+    </div>
+
+  </div>
+
+  <!-- ── Known limitations ─────────────────────────────────────────────────── -->
+  <h2 id="known-limitations">Known Limitations</h2>
+
+  <p>
+    The following issues are either inherent to third-party libraries or affect only enhanced
+    conformance levels (AAA) that are not our current target.
+  </p>
+
+  <div class="cannot-test">
+    <h3><strong>Leaflet map — partial keyboard support</strong></h3>
+    <p style="margin-top:8px;font-size:0.82rem;color:#c0d8e8">
+      The interactive map is powered by <strong>Leaflet.js</strong>, which provides limited
+      keyboard navigation. Zoom and pan with arrow/+/− keys work, but arbitrary panning to
+      off-screen markers is not fully supported without a custom keyboard handler. This affects
+      WCAG 2.1.1 (keyboard) in the map region specifically. All hotspot data is also accessible
+      in the sidebar list as a text alternative — users who cannot use the map can interact
+      entirely via the sidebar.
+      <br><br>
+      <strong>Plan:</strong> Evaluate <a href="https://github.com/tomik23/leaflet-accessible">leaflet-accessible</a>
+      or add a custom keyboard layer to cycle through markers with arrow keys.
+    </p>
+  </div>
+
+  <div class="cannot-test">
+    <h3><strong>Map popups — focus management</strong></h3>
+    <p style="margin-top:8px;font-size:0.82rem;color:#c0d8e8">
+      When a hotspot popup opens via keyboard, focus is not automatically moved into the popup.
+      This affects WCAG 2.4.3 (focus order). Leaflet does not expose a native API for this;
+      a custom <code>popupopen</code> event handler is needed to move focus.
+      <br><br>
+      <strong>Plan:</strong> Add <code>map.on('popupopen', e =&gt; e.popup.getElement().focus())</code>
+      and ensure the popup container has <code>tabindex="-1"</code>.
+    </p>
+  </div>
+
+  <div class="cannot-test">
+    <h3><strong>Map tile layer — no text alternative for visual information</strong></h3>
+    <p style="margin-top:8px;font-size:0.82rem;color:#c0d8e8">
+      The ESRI Ocean Base map tiles are purely visual. Waterway names, coastline shapes, and
+      depth indicators are not exposed as accessible text. This affects WCAG 1.1.1. The sidebar
+      provides all functionally necessary information (hotspot names, species, distances) as
+      plain text, which serves as a complete non-visual alternative.
+    </p>
+  </div>
+
+  <div class="cannot-test">
+    <h3><strong>Colour alone used for hotspot score grades</strong></h3>
+    <p style="margin-top:8px;font-size:0.82rem;color:#c0d8e8">
+      The score circle and spot list use colour (green → red) to indicate conditions grade.
+      While the grade word ("Good", "Poor") is always present alongside the colour, WCAG 1.4.1
+      requires that colour is not the <em>only</em> means of conveying information. The grade
+      text satisfies this, but the coloured dot on each spot item in the list has no text
+      alternative.
+      <br><br>
+      <strong>Plan:</strong> Remove or <code>aria-hidden</code> the purely decorative dot;
+      the grade is already in the <code>aria-label</code> of the button.
+    </p>
+  </div>
+
+  <!-- ── Cannot be automatically tested ────────────────────────────────────── -->
+  <h2 id="cannot-test-automatically">What Cannot Be Tested Automatically</h2>
+
+  <p>
+    Automated tools catch roughly 30–40% of WCAG issues. The following require human judgment
+    or assistive technology testing that no automated tool can currently cover:
+  </p>
+
+  <div class="audit-box">
+    <h3>Screen reader experience</h3>
+    <ul>
+      <li><strong>VoiceOver / NVDA reading order</strong> — automated tools check the DOM order but cannot verify that the reading experience feels logical and complete to a real screen reader user navigating the page for the first time.</li>
+      <li><strong>Live region announcements</strong> — axe confirms <code>aria-live</code> exists, but only a screen reader user can confirm that loading step changes are announced at the right frequency (not too often, not missed).</li>
+      <li><strong>Map landmark announcement</strong> — whether VoiceOver announces the map as "Interactive map showing fish hotspot observation hotspots…" and whether that's useful.</li>
+    </ul>
+  </div>
+
+  <div class="audit-box">
+    <h3>Cognitive accessibility — WCAG 2.2 / COGA</h3>
+    <ul>
+      <li><strong>Plain language</strong> — terms like "research-grade iNaturalist observations", "conditions score", and "WCAG 2.1 AA" may be confusing to users unfamiliar with fishing or accessibility standards.</li>
+      <li><strong>Error recovery</strong> — when GPS is denied or the API fails, error messages explain what happened, but whether the cause-and-recovery path is clear to all users requires human review.</li>
+      <li><strong>Consistent navigation</strong> — the app is a single page, so navigation consistency (WCAG 3.2.3) cannot be fully tested with only one page.</li>
+    </ul>
+  </div>
+
+  <div class="audit-box">
+    <h3>Zoom and reflow — WCAG 1.4.10</h3>
+    <ul>
+      <li>The layout uses a fixed sidebar width (320px) beside a map. At 400% zoom (320px viewport equivalent), the sidebar and map overlap. A single-column reflow is not implemented. This is a known WCAG 1.4.10 failure for the current layout.</li>
+      <li><strong>Plan:</strong> Add a responsive breakpoint that stacks the sidebar below the map at narrow viewport widths.</li>
+    </ul>
+  </div>
+
+  <div class="audit-box">
+    <h3>Touch and pointer — WCAG 2.5</h3>
+    <ul>
+      <li><strong>Target size</strong> (WCAG 2.5.8 AA, 2.2) — hotspot list items are at least 44×44 CSS pixels. The accessibility link in the header (♿) is smaller; needs review.</li>
+      <li><strong>Dragging</strong> — the map requires click-drag to pan. Leaflet provides pinch-zoom on touch. No alternative for single-pointer pan is provided (WCAG 2.5.7 AAA).</li>
+    </ul>
+  </div>
+
+  <div class="audit-box">
+    <h3>User-installed AT and browser extensions</h3>
+    <ul>
+      <li>Compatibility with browser-based assistive tools (e.g. Read Aloud, Helperbird, high-contrast browser extensions) has not been tested.</li>
+      <li>The dark colour scheme works with most high-contrast overlays, but forced-colours mode (Windows High Contrast) has not been tested.</li>
+    </ul>
+  </div>
+
+  <!-- ── Plan to reach full conformance ─────────────────────────────────────── -->
+  <h2 id="roadmap">Roadmap to Full WCAG 2.1 AA Conformance</h2>
+
+  <div class="status-grid" role="list" aria-label="Planned improvements">
+
+    <div class="status-row warn" role="listitem">
+      <div>
+        <div class="status-label">Responsive reflow at 400% zoom</div>
+        <div class="status-desc">Stack sidebar below map; allow full content in a single column without horizontal scrolling. WCAG 1.4.10.</div>
+      </div>
+      <span class="badge warn" aria-label="Planned">Planned</span>
+    </div>
+
+    <div class="status-row warn" role="listitem">
+      <div>
+        <div class="status-label">Popup focus management</div>
+        <div class="status-desc">Move focus into Leaflet popups when opened via keyboard; trap and restore focus correctly. WCAG 2.4.3.</div>
+      </div>
+      <span class="badge warn" aria-label="Planned">Planned</span>
+    </div>
+
+    <div class="status-row warn" role="listitem">
+      <div>
+        <div class="status-label">Full keyboard map navigation</div>
+        <div class="status-desc">Arrow-key cycling through hotspot markers on the map as an alternative to sidebar clicks. WCAG 2.1.1.</div>
+      </div>
+      <span class="badge warn" aria-label="Planned">Planned</span>
+    </div>
+
+    <div class="status-row warn" role="listitem">
+      <div>
+        <div class="status-label">Forced colours / high contrast mode</div>
+        <div class="status-desc">Test and fix layout under Windows High Contrast and <code>forced-colors: active</code> CSS media query. WCAG 1.4.11.</div>
+      </div>
+      <span class="badge warn" aria-label="Planned">Planned</span>
+    </div>
+
+    <div class="status-row warn" role="listitem">
+      <div>
+        <div class="status-label">Real screen reader testing</div>
+        <div class="status-desc">Manual end-to-end walkthrough with VoiceOver (macOS/iOS) and NVDA (Windows). Target: no unexpected announcements, all content reachable in a logical order.</div>
+      </div>
+      <span class="badge warn" aria-label="Planned">Planned</span>
+    </div>
+
+  </div>
+
+  <!-- ── How we test ────────────────────────────────────────────────────────── -->
+  <h2 id="how-we-test">How We Test</h2>
+
+  <div class="audit-box">
+    <ul>
+      <li><strong>axe-core 4</strong> via <code>@axe-core/playwright</code> — WCAG 2.1 AA automated scan on loading screen, full page, and sidebar in isolation after the app has fully initialised with real GPS and live data.</li>
+      <li><strong>Playwright 15 dedicated a11y tests</strong> — keyboard Tab/Enter navigation, focus visibility, <code>role=progressbar</code> attributes, <code>aria-live</code> regions, emoji <code>aria-hidden</code>, score circle <code>aria-label</code>, source badge titles, and reduced-motion media query.</li>
+      <li><strong>44 functional Playwright tests</strong> — also run after every change to catch regressions in the app that could affect accessibility.</li>
+      <li><strong>Manual review</strong> — HTML structure, landmark hierarchy, reading order, and this statement itself reviewed by a human.</li>
+    </ul>
+  </div>
+
+  <h2 id="contact">Contact</h2>
+  <p>
+    If you experience an accessibility barrier, please
+    <a href="https://github.com/c-mco/fishcast-ai/issues">open an issue on GitHub</a>.
+    Include a description of the barrier, the assistive technology and browser you are using,
+    and the steps to reproduce it. We aim to respond within 5 working days.
+  </p>
+
+</main>
+
+<footer role="contentinfo">
+  <p>FishCast AI — built as an AI demo. Accessibility audit last run 21 April 2026.</p>
+</footer>
+
+</body>
+</html>
